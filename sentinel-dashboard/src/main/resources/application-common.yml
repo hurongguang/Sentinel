@@ -1,0 +1,32 @@
+auth:
+  filter:
+    exclude-url-suffixes: htm,html,js,css,map,ico,ttf,woff,png
+    exclude-urls: /,/auth/login,/auth/logout,/registry/machine,/version
+  password: sentinel
+  username: sentinel
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  # All < Trace < Debug < Info < Warn < Error < Fatal < OFF
+  level:
+    # 所有日志的输出级别
+    root: INFO
+    # 更细的控制
+    org.springframework.web: info
+    com.alibaba.csp.sentinel.dashboard.mapper: debug
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+sentinel:
+  dashboard:
+    version: '@project.version@'
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+    session:
+      cookie:
+        name: sentinel_dashboard_cookie

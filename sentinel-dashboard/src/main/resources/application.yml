@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    include: common
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    password: Taimudev2023
+    url: jdbc:mysql://rm-bp16gbc2b2x5lssaweo.mysql.rds.aliyuncs.com/jihex_product?useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&useSSL=false
+    username: taimudev

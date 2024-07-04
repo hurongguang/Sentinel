@@ -22,3 +22,8 @@ auth.password=sentinel
 # Inject the dashboard version. It's required to enable
 # filtering in pom.xml for this resource file.
 sentinel.dashboard.version=@project.version@
+
+spring.datasource.url=jdbc:mysql://rm-bp16gbc2b2x5lssaweo.mysql.rds.aliyuncs.com/jihex_product?useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false
+spring.datasource.username=taimudev
+spring.datasource.password=Taimudev2023
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver

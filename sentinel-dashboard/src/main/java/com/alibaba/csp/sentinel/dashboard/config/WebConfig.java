@@ -74,7 +74,7 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Bean
     public FilterRegistrationBean sentinelFilterRegistration() {
-        FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
+        FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(new CommonFilter());
         registration.addUrlPatterns("/*");
         registration.setName("sentinelFilter");
@@ -106,7 +106,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Bean
     public FilterRegistrationBean authenticationFilterRegistration() {
-        FilterRegistrationBean<Filter> registration = new FilterRegistrationBean<>();
+        FilterRegistrationBean registration = new FilterRegistrationBean();
         registration.setFilter(loginAuthenticationFilter);
         registration.addUrlPatterns("/*");
         registration.setName("authenticationFilter");
