@@ -6,3 +6,9 @@ spring:
     password: Taimudev2023
     url: jdbc:mysql://rm-bp16gbc2b2x5lssaweo.mysql.rds.aliyuncs.com/jihex_product?useUnicode=true&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&useSSL=false
     username: taimudev
+sentinel:
+  nacos:
+    serverAddr: 47.99.246.233:848
+    namespace: 2530e3da-8c5f-4b96-bf03-e6e1d64dbf40
+    username: nacos
+    password: qiatu2023

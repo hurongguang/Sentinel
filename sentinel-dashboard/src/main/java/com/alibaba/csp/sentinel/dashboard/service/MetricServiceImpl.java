@@ -42,7 +42,7 @@ public class MetricServiceImpl extends ServiceImpl<MetricMapper, Metric> impleme
         try {
             return this.lambdaQuery()
                     .eq(Metric::getApp, app)
-                    .orderByAsc(Metric::getTimestamp)
+                    .orderByDesc(Metric::getTimestamp)
                     .last("limit 1000")
                     .select(Metric::getResource)
                     .list()

@@ -22,7 +22,7 @@ import com.alibaba.csp.sentinel.dashboard.datasource.entity.MetricEntity;
 import com.alibaba.csp.sentinel.dashboard.discovery.AppInfo;
 import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
 import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
-import com.alibaba.csp.sentinel.dashboard.service.MetricService;
+import com.alibaba.csp.sentinel.dashboard.repository.metric.MetricsRepository;
 import com.alibaba.csp.sentinel.node.metric.MetricNode;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import org.apache.http.HttpResponse;
@@ -67,10 +67,10 @@ public class MetricFetcher {
 
     private Map<String, AtomicLong> appLastFetchTime = new ConcurrentHashMap<>();
 
-    /*@Autowired
-    private MetricsRepository<MetricEntity> metricStore;*/
     @Autowired
-    private MetricService metricService;
+    private MetricsRepository<MetricEntity> metricStore;
+    /*@Autowired
+    private MetricService metricStore;*/
     @Autowired
     private AppManagement appManagement;
 
@@ -132,7 +132,7 @@ public class MetricFetcher {
             entity.setGmtCreate(date);
             entity.setGmtModified(date);
         }
-        metricService.saveAll(map.values());
+        metricStore.saveAll(map.values());
     }
 
     /**
