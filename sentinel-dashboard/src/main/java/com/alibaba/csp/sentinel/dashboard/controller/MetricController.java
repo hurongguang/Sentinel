@@ -19,6 +19,7 @@ import com.alibaba.csp.sentinel.dashboard.datasource.entity.MetricEntity;
 import com.alibaba.csp.sentinel.dashboard.domain.Result;
 import com.alibaba.csp.sentinel.dashboard.domain.vo.MetricVo;
 import com.alibaba.csp.sentinel.dashboard.repository.metric.MetricsRepository;
+import com.alibaba.csp.sentinel.dashboard.service.MetricService;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +43,12 @@ public class MetricController {
 
     private static final long maxQueryIntervalMs = 1000 * 60 * 60;
 
-    @Autowired
-    private MetricsRepository<MetricEntity> metricStore;
+    /*@Autowired
+    private MetricsRepository<MetricEntity> metricStore;*/
 
     //持久化mysql
-    /*@Autowired
-    private metricStore metricStore;*/
+    @Autowired
+    private MetricService metricStore;
 
     @ResponseBody
     @RequestMapping("/queryTopResourceMetric.json")

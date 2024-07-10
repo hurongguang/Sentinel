@@ -240,7 +240,7 @@ angular
 
       .state('dashboard.degrade', {
         templateUrl: 'app/views/degrade.html',
-        url: '/degrade/:app',
+        url: '/v2/degrade/:app',
         controller: 'DegradeCtl',
         resolve: {
           loadMyFiles: ['$ocLazyLoad', function ($ocLazyLoad) {

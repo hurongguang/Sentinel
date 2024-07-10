@@ -13,35 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.controller;
-
-import java.util.Date;
-import java.util.List;
+package com.alibaba.csp.sentinel.dashboard.controller.v2;
 
 import com.alibaba.csp.sentinel.dashboard.auth.AuthAction;
-import com.alibaba.csp.sentinel.dashboard.client.SentinelApiClient;
-import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
-import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
 import com.alibaba.csp.sentinel.dashboard.auth.AuthService.PrivilegeType;
-import com.alibaba.csp.sentinel.dashboard.repository.rule.RuleRepository;
+import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.DegradeRuleEntity;
+import com.alibaba.csp.sentinel.dashboard.domain.Result;
+import com.alibaba.csp.sentinel.dashboard.repository.rule.InMemoryRuleRepositoryAdapter;
+import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
+import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreakerStrategy;
 import com.alibaba.csp.sentinel.util.StringUtil;
-
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.DegradeRuleEntity;
-import com.alibaba.csp.sentinel.dashboard.domain.Result;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * Controller regarding APIs of degrade rules. Refactored since 1.8.0.
@@ -49,41 +40,39 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Carpenter Lee
  * @author Eric Zhao
  */
-@Deprecated
-//@RestController
-//@RequestMapping("/degrade")
-public class DegradeController {
+@RestController
+@RequestMapping("/degrade")
+public class DegradeControllerV2 {
 
-    /*private final Logger logger = LoggerFactory.getLogger(DegradeController.class);
+    private final Logger logger = LoggerFactory.getLogger(DegradeControllerV2.class);
 
     @Autowired
-    private RuleRepository<DegradeRuleEntity, Long> repository;
+    private InMemoryRuleRepositoryAdapter<DegradeRuleEntity> repository;
+
     @Autowired
-    private SentinelApiClient sentinelApiClient;
+    @Qualifier("degradeRuleNacosProvider")
+    private DynamicRuleProvider<List<DegradeRuleEntity>> ruleProvider;
     @Autowired
-    private AppManagement appManagement;
+    @Qualifier("degradeRuleNacosPublisher")
+    private DynamicRulePublisher<List<DegradeRuleEntity>> rulePublisher;
 
     @GetMapping("/rules.json")
     @AuthAction(PrivilegeType.READ_RULE)
-    public Result<List<DegradeRuleEntity>> apiQueryMachineRules(String app, String ip, Integer port) {
+    public Result<List<DegradeRuleEntity>> apiQueryMachineRules(String app) {
         if (StringUtil.isEmpty(app)) {
             return Result.ofFail(-1, "app can't be null or empty");
         }
-        if (StringUtil.isEmpty(ip)) {
-            return Result.ofFail(-1, "ip can't be null or empty");
-        }
-        if (port == null) {
-            return Result.ofFail(-1, "port can't be null");
-        }
-        if (!appManagement.isValidMachineOfApp(app, ip)) {
-            return Result.ofFail(-1, "given ip does not belong to given app");
-        }
         try {
-            List<DegradeRuleEntity> rules = sentinelApiClient.fetchDegradeRuleOfMachine(app, ip, port);
+            List<DegradeRuleEntity> rules = ruleProvider.getRules(app);
+            if (rules != null && !rules.isEmpty()) {
+                for (DegradeRuleEntity entity : rules) {
+                    entity.setApp(app);
+                }
+            }
             rules = repository.saveAll(rules);
             return Result.ofSuccess(rules);
         } catch (Throwable throwable) {
-            logger.error("queryApps error:", throwable);
+            logger.error("Error when querying flow rules:", throwable);
             return Result.ofThrowable(-1, throwable);
         }
     }
@@ -95,17 +84,18 @@ public class DegradeController {
         if (checkResult != null) {
             return checkResult;
         }
+        entity.setId(null);
         Date date = new Date();
         entity.setGmtCreate(date);
         entity.setGmtModified(date);
+        entity.setLimitApp(entity.getLimitApp().trim());
+        entity.setResource(entity.getResource().trim());
         try {
             entity = repository.save(entity);
+            publishRules(entity.getApp());
         } catch (Throwable t) {
-            logger.error("Failed to add new degrade rule, app={}, ip={}", entity.getApp(), entity.getIp(), t);
+            logger.error("Failed to add new degrade rule", t);
             return Result.ofThrowable(-1, t);
-        }
-        if (!publishRules(entity.getApp(), entity.getIp(), entity.getPort())) {
-            logger.warn("Publish degrade rules failed, app={}", entity.getApp());
         }
         return Result.ofSuccess(entity);
     }
@@ -113,7 +103,7 @@ public class DegradeController {
     @PutMapping("/rule/{id}")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<DegradeRuleEntity> apiUpdateRule(@PathVariable("id") Long id,
-                                                     @RequestBody DegradeRuleEntity entity) {
+                                                   @RequestBody DegradeRuleEntity entity) {
         if (id == null || id <= 0) {
             return Result.ofFail(-1, "id can't be null or negative");
         }
@@ -129,17 +119,18 @@ public class DegradeController {
         if (checkResult != null) {
             return checkResult;
         }
-
+        entity.setId(id);
         entity.setGmtCreate(oldEntity.getGmtCreate());
         entity.setGmtModified(new Date());
         try {
             entity = repository.save(entity);
+            if (entity == null) {
+                return Result.ofFail(-1, "save entity fail");
+            }
+            publishRules(oldEntity.getApp());
         } catch (Throwable t) {
-            logger.error("Failed to save degrade rule, id={}, rule={}", id, entity, t);
+            logger.error("Failed to update degrade rule, id={}, rule={}", id, entity, t);
             return Result.ofThrowable(-1, t);
-        }
-        if (!publishRules(entity.getApp(), entity.getIp(), entity.getPort())) {
-            logger.warn("Publish degrade rules failed, app={}", entity.getApp());
         }
         return Result.ofSuccess(entity);
     }
@@ -158,33 +149,25 @@ public class DegradeController {
 
         try {
             repository.delete(id);
+            publishRules(oldEntity.getApp());
         } catch (Throwable throwable) {
             logger.error("Failed to delete degrade rule, id={}", id, throwable);
             return Result.ofThrowable(-1, throwable);
         }
-        if (!publishRules(oldEntity.getApp(), oldEntity.getIp(), oldEntity.getPort())) {
-            logger.warn("Publish degrade rules failed, app={}", oldEntity.getApp());
-        }
         return Result.ofSuccess(id);
     }
 
-    private boolean publishRules(String app, String ip, Integer port) {
-        List<DegradeRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));
-        return sentinelApiClient.setDegradeRuleOfMachine(app, ip, port, rules);
+    private void publishRules(String app) throws Exception {
+        List<DegradeRuleEntity> rules = repository.findAllByApp(app);
+        rulePublisher.publish(app, rules);
     }
 
     private <R> Result<R> checkEntityInternal(DegradeRuleEntity entity) {
+        if (entity == null) {
+            return Result.ofFail(-1, "invalid body");
+        }
         if (StringUtil.isBlank(entity.getApp())) {
-            return Result.ofFail(-1, "app can't be blank");
-        }
-        if (StringUtil.isBlank(entity.getIp())) {
-            return Result.ofFail(-1, "ip can't be null or empty");
-        }
-        if (!appManagement.isValidMachineOfApp(entity.getApp(), entity.getIp())) {
-            return Result.ofFail(-1, "given ip does not belong to given app");
-        }
-        if (entity.getPort() == null || entity.getPort() <= 0) {
-            return Result.ofFail(-1, "invalid port: " + entity.getPort());
+            return Result.ofFail(-1, "app can't be null or empty");
         }
         if (StringUtil.isBlank(entity.getLimitApp())) {
             return Result.ofFail(-1, "limitApp can't be null or empty");
@@ -205,10 +188,10 @@ public class DegradeController {
             return Result.ofFail(-1, "circuit breaker strategy cannot be null");
         }
         if (strategy < CircuitBreakerStrategy.SLOW_REQUEST_RATIO.getType()
-            || strategy > RuleConstant.DEGRADE_GRADE_EXCEPTION_COUNT) {
+                || strategy > RuleConstant.DEGRADE_GRADE_EXCEPTION_COUNT) {
             return Result.ofFail(-1, "Invalid circuit breaker strategy: " + strategy);
         }
-        if (entity.getMinRequestAmount()  == null || entity.getMinRequestAmount() <= 0) {
+        if (entity.getMinRequestAmount() == null || entity.getMinRequestAmount() <= 0) {
             return Result.ofFail(-1, "Invalid minRequestAmount");
         }
         if (entity.getStatIntervalMs() == null || entity.getStatIntervalMs() <= 0) {
@@ -227,5 +210,5 @@ public class DegradeController {
             }
         }
         return null;
-    }*/
+    }
 }
