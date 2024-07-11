@@ -13,51 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.controller;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-
-import com.alibaba.csp.sentinel.dashboard.auth.AuthAction;
-import com.alibaba.csp.sentinel.dashboard.client.CommandNotFoundException;
-import com.alibaba.csp.sentinel.dashboard.client.SentinelApiClient;
-import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
-import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
-import com.alibaba.csp.sentinel.dashboard.auth.AuthService;
-import com.alibaba.csp.sentinel.dashboard.auth.AuthService.PrivilegeType;
-import com.alibaba.csp.sentinel.slots.block.RuleConstant;
-import com.alibaba.csp.sentinel.util.StringUtil;
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.SentinelVersion;
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.ParamFlowRuleEntity;
-import com.alibaba.csp.sentinel.dashboard.domain.Result;
-import com.alibaba.csp.sentinel.dashboard.repository.rule.RuleRepository;
-import com.alibaba.csp.sentinel.dashboard.util.VersionUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+package com.alibaba.csp.sentinel.dashboard.controller.v1;
 
 /**
  * @author Eric Zhao
  * @since 0.2.1
  */
-@RestController
-@RequestMapping(value = "/paramFlow")
+@Deprecated
+/*@RestController
+@RequestMapping(value = "/paramFlow")*/
 public class ParamFlowRuleController {
 
-    private final Logger logger = LoggerFactory.getLogger(ParamFlowRuleController.class);
+    /*private final Logger logger = LoggerFactory.getLogger(ParamFlowRuleController.class);
 
     @Autowired
     private SentinelApiClient sentinelApiClient;
@@ -268,5 +235,5 @@ public class ParamFlowRuleController {
             "Sentinel client not supported for parameter flow control (unsupported version or dependency absent)");
     }
 
-    private final SentinelVersion version020 = new SentinelVersion().setMinorVersion(2);
+    private final SentinelVersion version020 = new SentinelVersion().setMinorVersion(2);*/
 }

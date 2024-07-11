@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.controller;
+package com.alibaba.csp.sentinel.dashboard.controller.v1;
 
 import java.util.Date;
 import java.util.List;
@@ -50,8 +50,9 @@ import org.springframework.web.bind.annotation.RestController;
  * @author leyou
  * @author Eric Zhao
  */
-@RestController
-@RequestMapping(value = "/v1/flow")
+@Deprecated
+/*@RestController
+@RequestMapping(value = "/v1/flow")*/
 public class FlowControllerV1 {
 
     private final Logger logger = LoggerFactory.getLogger(FlowControllerV1.class);
